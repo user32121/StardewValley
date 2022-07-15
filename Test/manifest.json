@@ -1,0 +1,10 @@
+﻿{
+  "Name": "Test",
+  "Author": "user32121",
+  "Version": "1.0.0",
+  "Description": "A testing mod",
+  "UniqueID": "user32121.Test",
+  "EntryDll": "Test.dll",
+  "MinimumApiVersion": "3.0.0",
+  "UpdateKeys": []
+}

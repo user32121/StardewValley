@@ -1,0 +1,10 @@
+﻿{
+  "Name": "AutoNav",
+  "Author": "user32121",
+  "Version": "1.0.0",
+  "Description": "Automates map navigation",
+  "UniqueID": "user32121.AutoNav",
+  "EntryDll": "AutoNav.dll",
+  "MinimumApiVersion": "3.0.0",
+  "UpdateKeys": []
+}

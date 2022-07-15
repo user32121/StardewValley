@@ -1,0 +1,10 @@
+﻿{
+  "Name": "CharacterTracker",
+  "Author": "user32121",
+  "Version": "1.0.0",
+  "Description": "A small tool for NPCs and animal",
+  "UniqueID": "user32121.CharacterTracker",
+  "EntryDll": "CharacterTracker.dll",
+  "MinimumApiVersion": "3.0.0",
+  "UpdateKeys": []
+}

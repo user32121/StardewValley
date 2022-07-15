@@ -1,0 +1,10 @@
+﻿{
+  "Name": "AutoTasker",
+  "Author": "user32121",
+  "Version": "1.0.0",
+  "Description": "Automates various repetitive tasks on the farm",
+  "UniqueID": "user32121.AutoTasker",
+  "EntryDll": "AutoTasker.dll",
+  "MinimumApiVersion": "3.0.0",
+  "UpdateKeys": []
+}

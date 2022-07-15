@@ -1,0 +1,10 @@
+﻿{
+  "Name": "WildTimeLapse",
+  "Author": "user32121",
+  "Version": "1.0.0",
+  "Description": "A quick timelapse program",
+  "UniqueID": "user32121.WildTimeLapse",
+  "EntryDll": "WildTimeLapse.dll",
+  "MinimumApiVersion": "3.0.0",
+  "UpdateKeys": []
+}

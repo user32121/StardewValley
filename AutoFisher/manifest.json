@@ -1,0 +1,10 @@
+﻿{
+  "Name": "AutoFisher",
+  "Author": "user32121",
+  "Version": "1.0.0",
+  "Description": "Plays the fishing game legitimately using PID. Discontinued.",
+  "UniqueID": "user32121.AutoFisher",
+  "EntryDll": "AutoFisher.dll",
+  "MinimumApiVersion": "3.0.0",
+  "UpdateKeys": []
+}

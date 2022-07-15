@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+    <EnableHarmony>true</EnableHarmony>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="arrowB.png" />
+    <None Remove="arrowBL.png" />
+    <None Remove="arrowBR.png" />
+    <None Remove="arrowL.png" />
+    <None Remove="arrowR.png" />
+    <None Remove="arrowT.png" />
+    <None Remove="arrowTL.png" />
+    <None Remove="arrowTR.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Pathoschild.Stardew.ModBuildConfig" Version="4.0.1" />
+  </ItemGroup>
+
+</Project>
