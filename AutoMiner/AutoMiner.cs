@@ -338,25 +338,22 @@ namespace AutoMiner
                             SetHUDMessage("no weapon");
                         else
                             Game1.player.CurrentToolIndex = toolIndex;
-
+                        
 
                         if (Game1.currentCursorTile != monsterTile)
                         {
                             //face right direction
-                            Game1.player.faceGeneralDirection(monsterTile * Game1.tileSize);
+                            Game1.player.faceGeneralDirection(nearestMonster, 0, false, false);
                             int screenX = (int)(((monsterTile.X + 0.5f) * Game1.tileSize - Game1.viewport.X) * Game1.options.zoomLevel);
                             int screenY = (int)(((monsterTile.Y + 0.5f) * Game1.tileSize - Game1.viewport.Y) * Game1.options.zoomLevel);
                             Game1.input.SetMousePosition(screenX, screenY);
                         }
-                        else
-                        {
-                            ModPatches.SetKeyUp(Game1.options.moveUpButton[0].key);
-                            ModPatches.SetKeyUp(Game1.options.moveDownButton[0].key);
-                            ModPatches.SetKeyUp(Game1.options.moveLeftButton[0].key);
-                            ModPatches.SetKeyUp(Game1.options.moveRightButton[0].key);
-                            Game1.player.BeginUsingTool();
-                            goto DONE_TASK_TICK;
-                        }
+                        ModPatches.SetKeyUp(Game1.options.moveUpButton[0].key);
+                        ModPatches.SetKeyUp(Game1.options.moveDownButton[0].key);
+                        ModPatches.SetKeyUp(Game1.options.moveLeftButton[0].key);
+                        ModPatches.SetKeyUp(Game1.options.moveRightButton[0].key);
+                        Game1.player.BeginUsingTool();
+                        goto DONE_TASK_TICK;
                     }
 
                     if (Game1.player.Stamina < 10)
