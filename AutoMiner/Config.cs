@@ -51,5 +51,11 @@ namespace AutoMiner
             { "ore", new List<string>(){ ".*Iridium.*", ".*Mystic.*" } },
             { "main", new List<string>(){ ".*Iridium.*", ".*Mystic.*" } },
         };
+
+        public double eatStaminaThreshold = 0.1;  //if below, will eat if it doesn't overflow
+        public double eatHealthThreshold = 0.5;
+        public double overEatStaminaThreshold = 0.1;  //if below, will eat even if it overflows
+        public double overEatHealthThreshold = 0.1;
+        public bool eatBestFoodFirst = false;
     }
 }

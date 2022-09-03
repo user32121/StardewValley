@@ -15,7 +15,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WildTimeLapse", "WildTimeLa
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CharacterTracker", "CharacterTracker\CharacterTracker.csproj", "{4CAACF92-5D14-455D-964D-5A6B31EA602B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoNav", "AutoNav\AutoNav.csproj", "{8133276F-C016-46C3-912B-20C70B63796B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AutoNav", "AutoNav\AutoNav.csproj", "{8133276F-C016-46C3-912B-20C70B63796B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "User32121Lib", "User32121Lib\User32121Lib.csproj", "{529FF561-0F75-4CA6-9B9E-D200EAB31DD7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -51,6 +53,10 @@ Global
 		{8133276F-C016-46C3-912B-20C70B63796B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8133276F-C016-46C3-912B-20C70B63796B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8133276F-C016-46C3-912B-20C70B63796B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{529FF561-0F75-4CA6-9B9E-D200EAB31DD7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{529FF561-0F75-4CA6-9B9E-D200EAB31DD7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{529FF561-0F75-4CA6-9B9E-D200EAB31DD7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{529FF561-0F75-4CA6-9B9E-D200EAB31DD7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

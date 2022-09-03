@@ -315,7 +315,7 @@ namespace AutoMiner
                 }
                 prevPlayerUsingTool = Game1.player.UsingTool;
 
-                if (!Game1.player.UsingTool)
+                if (!Game1.player.UsingTool && !Game1.player.isEating)
                 {
                     //combat
                     Vector2 nearestMonster = Vector2.Zero;
@@ -338,7 +338,7 @@ namespace AutoMiner
                             SetHUDMessage("no weapon");
                         else
                             Game1.player.CurrentToolIndex = toolIndex;
-                        
+
 
                         if (Game1.currentCursorTile != monsterTile)
                         {
@@ -356,6 +356,53 @@ namespace AutoMiner
                         goto DONE_TASK_TICK;
                     }
 
+                    //eat
+                    if (Game1.player.Stamina < Game1.player.MaxStamina * config.eatStaminaThreshold)
+                    {
+                        int indexToEat = -1;
+                        int staminaRecovered = -1;
+                        for (int i = 0; i < Game1.player.Items.Count; i++)
+                        {
+                            if (Game1.player.Items[i] != null &&
+                                Game1.player.Items[i].staminaRecoveredOnConsumption() > 0 &&  //good food
+                                (Game1.player.Items[i].staminaRecoveredOnConsumption() + Game1.player.Stamina <= Game1.player.MaxStamina &&  //prevent overeat
+                                Game1.player.Items[i].healthRecoveredOnConsumption() + Game1.player.health <= Game1.player.maxHealth ||  //prevent overeat
+                                Game1.player.Stamina < Game1.player.MaxStamina * config.overEatStaminaThreshold) &&   //allow overeat
+                                (Game1.player.Items[i].staminaRecoveredOnConsumption() < staminaRecovered ^ config.eatBestFoodFirst || indexToEat == -1))  //find best or worst food
+                            {
+                                staminaRecovered = Game1.player.Items[i].staminaRecoveredOnConsumption();
+                                indexToEat = i;
+                            }
+                        }
+                        if (indexToEat >= 0)
+                        {
+                            Game1.player.CurrentToolIndex = indexToEat;
+                            Game1.player.eatHeldObject();
+                        }
+                    }
+                    if (Game1.player.health < Game1.player.maxHealth * config.eatHealthThreshold)
+                    {
+                        int indexToEat = -1;
+                        int healthRecovered = -1;
+                        for (int i = 0; i < Game1.player.Items.Count; i++)
+                        {
+                            if (Game1.player.Items[i] != null &&
+                                Game1.player.Items[i].healthRecoveredOnConsumption() > 0 &&  //good food
+                                (Game1.player.Items[i].staminaRecoveredOnConsumption() + Game1.player.stamina <= Game1.player.MaxStamina &&  //prevent overeat
+                                Game1.player.Items[i].healthRecoveredOnConsumption() + Game1.player.health <= Game1.player.maxHealth ||  //prevent overeat
+                                Game1.player.health < Game1.player.maxHealth * config.overEatHealthThreshold) &&   //allow overeat
+                                (Game1.player.Items[i].healthRecoveredOnConsumption() < healthRecovered ^ config.eatBestFoodFirst || indexToEat == -1))  //find best or worst food
+                            {
+                                healthRecovered = Game1.player.Items[i].healthRecoveredOnConsumption();
+                                indexToEat = i;
+                            }
+                        }
+                        if (indexToEat >= 0)
+                        {
+                            Game1.player.CurrentToolIndex = indexToEat;
+                            Game1.player.eatHeldObject();
+                        }
+                    }
                     if (Game1.player.Stamina < 10)
                     {
                         Game1.addHUDMessage(new HUDMessage("Low stamina", 3));
@@ -377,6 +424,10 @@ namespace AutoMiner
                             //switch to tool
                             Type taskTool = typeof(MeleeWeapon);
                             Object targetObj = Game1.currentLocation.getObjectAtTile((int)target.Value.X, (int)target.Value.Y);
+                            ResourceClump rc = null;
+                            foreach (ResourceClump item in Game1.currentLocation.resourceClumps)
+                                if (item.occupiesTile((int)target.Value.X, (int)target.Value.Y))
+                                    rc = item;
                             if (targetObj != null)
                                 if (targetObj is BreakableContainer || targetObj.name == "Weeds")
                                     taskTool = typeof(MeleeWeapon);
@@ -384,6 +435,14 @@ namespace AutoMiner
                                     taskTool = typeof(Pickaxe);
                                 else
                                     taskTool = typeof(HandToolPlaceholder);
+                            else if (rc != null)
+                            {
+                                if (rc.parentSheetIndex.Value == ResourceClump.mineRock1Index ||
+                                    rc.parentSheetIndex.Value == ResourceClump.mineRock2Index ||
+                                    rc.parentSheetIndex.Value == ResourceClump.mineRock3Index ||
+                                    rc.parentSheetIndex.Value == ResourceClump.mineRock4Index)
+                                    taskTool = typeof(Pickaxe);
+                            }
 
                             xTile.Layers.Layer layer = (Game1.currentLocation as MineShaft)?.map.GetLayer("Buildings");
                             if (layer != null && (layer.Tiles.Array[(int)target.Value.X, (int)target.Value.Y]?.TileIndex == 173 || layer.Tiles.Array[(int)target.Value.X, (int)target.Value.Y]?.TileIndex == 174))
@@ -456,7 +515,10 @@ namespace AutoMiner
                                     }
                                     else if (rc != null)
                                     {
-                                        if (rc.parentSheetIndex.Value == ResourceClump.mineRock1Index || rc.parentSheetIndex.Value == ResourceClump.mineRock2Index || rc.parentSheetIndex.Value == ResourceClump.mineRock3Index || rc.parentSheetIndex.Value == ResourceClump.mineRock4Index)
+                                        if (rc.parentSheetIndex.Value == ResourceClump.mineRock1Index ||
+                                            rc.parentSheetIndex.Value == ResourceClump.mineRock2Index ||
+                                            rc.parentSheetIndex.Value == ResourceClump.mineRock3Index ||
+                                            rc.parentSheetIndex.Value == ResourceClump.mineRock4Index)
                                             taskTool = typeof(Pickaxe);
                                     }
 
