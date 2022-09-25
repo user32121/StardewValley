@@ -12,7 +12,7 @@ namespace AutoNav
     {
         public bool enabled = true;
         public KeybindList toggleNavOverlay = new KeybindList(StardewModdingAPI.SButton.I);
-        
+
         public KeybindList up = new KeybindList(StardewModdingAPI.SButton.W);
         public KeybindList down = new KeybindList(StardewModdingAPI.SButton.X);
         public KeybindList left = new KeybindList(StardewModdingAPI.SButton.A);
@@ -66,6 +66,7 @@ namespace AutoNav
                 { DIRECTION.DOWN, "Forest" },
                 { DIRECTION.UP, "Backwoods" },
                 { DIRECTION.UPLEFT, "FarmCave" },
+                { DIRECTION.UPRIGHT, "68,16|68,15;Mail" },
                 { DIRECTION.CENTER, "FarmHouse" },
             } },
             { "BusStop", new Dictionary<DIRECTION, string>()
@@ -130,6 +131,22 @@ namespace AutoNav
             { "Tent", new Dictionary<DIRECTION, string>()
             {
                 { DIRECTION.LEFT, "Minecart" },
+            } },
+            { "Greenhouse", new Dictionary<DIRECTION, string>()
+            {
+                { DIRECTION.DOWN, "Farm" },
+            } },
+            { "Deluxe Barn", new Dictionary<DIRECTION, string>()
+            {
+                { DIRECTION.DOWN, "Farm" },
+            } },
+            { "Deluxe Coop", new Dictionary<DIRECTION, string>()
+            {
+                { DIRECTION.DOWN, "Farm" },
+            } },
+            { "CommunityCenter", new Dictionary<DIRECTION, string>()
+            {
+                { DIRECTION.DOWN, "Town" },
             } },
         };
     }

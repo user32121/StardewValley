@@ -4,9 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace AutoMiner
+namespace User32121Lib
 {
-    internal class HandToolPlaceholder
+    public class Options
     {
+        public bool autoEat = true;
     }
 }

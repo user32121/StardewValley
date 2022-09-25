@@ -1,10 +1,10 @@
 ﻿{
-  "Name": "AutoMiner",
+  "Name": "Test2",
   "Author": "user32121",
-  "Version": "1.2.0",
-  "Description": "Automates the mining process",
-  "UniqueID": "user32121.AutoMiner",
-  "EntryDll": "AutoMiner.dll",
+  "Version": "1.0.0",
+  "Description": "A testing mod",
+  "UniqueID": "user32121.Test2",
+  "EntryDll": "Test2.dll",
   "MinimumApiVersion": "3.0.0",
   "UpdateKeys": [],
   "Dependencies": [

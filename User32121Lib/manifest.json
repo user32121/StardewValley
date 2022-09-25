@@ -1,0 +1,10 @@
+﻿{
+  "Name": "User32121Lib",
+  "Author": "user32121",
+  "Version": "1.0.1",
+  "Description": "Library that contains functions such as pathfinding",
+  "UniqueID": "user32121.User32121Lib",
+  "EntryDll": "User32121Lib.dll",
+  "MinimumApiVersion": "3.0.0",
+  "UpdateKeys": []
+}

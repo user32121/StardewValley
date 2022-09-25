@@ -19,6 +19,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AutoNav", "AutoNav\AutoNav.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "User32121Lib", "User32121Lib\User32121Lib.csproj", "{529FF561-0F75-4CA6-9B9E-D200EAB31DD7}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test2", "Test2\Test2.csproj", "{FDB15C9B-19AD-4B48-89B1-0442D2F7DAAD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -57,6 +59,10 @@ Global
 		{529FF561-0F75-4CA6-9B9E-D200EAB31DD7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{529FF561-0F75-4CA6-9B9E-D200EAB31DD7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{529FF561-0F75-4CA6-9B9E-D200EAB31DD7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FDB15C9B-19AD-4B48-89B1-0442D2F7DAAD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FDB15C9B-19AD-4B48-89B1-0442D2F7DAAD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FDB15C9B-19AD-4B48-89B1-0442D2F7DAAD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FDB15C9B-19AD-4B48-89B1-0442D2F7DAAD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -16,7 +16,6 @@ namespace AutoMiner
         public KeybindList reloadConfig = new KeybindList(SButton.F9);
         public KeybindList startBot = new KeybindList(SButton.OemSemicolon);
         public KeybindList cycleTarget = new KeybindList(SButton.OemQuotes);
-        public KeybindList spamAttack = new KeybindList(SButton.Q);
 
         public int highlightThickness = 2;
         public int pathThickness = 2;
@@ -24,6 +23,7 @@ namespace AutoMiner
         public Color targetColor = Color.Lime;
         public Color ladderColor = Color.Yellow;
         public Color specialColor = Color.Magenta;
+        public Color enemyColor = Color.DeepPink;
 
         public bool autoDescend = true;
         public bool outputInfestedFloors = true;
@@ -52,10 +52,8 @@ namespace AutoMiner
             { "main", new List<string>(){ ".*Iridium.*", ".*Mystic.*" } },
         };
 
-        public double eatStaminaThreshold = 0.1;  //if below, will eat if it doesn't overflow
-        public double eatHealthThreshold = 0.5;
-        public double overEatStaminaThreshold = 0.1;  //if below, will eat even if it overflows
-        public double overEatHealthThreshold = 0.1;
-        public bool eatBestFoodFirst = false;
+        public bool highlightCrab = true;
+        public bool highlightDuggy = true;
+        public bool highlightStoneGolem = true;
     }
 }
