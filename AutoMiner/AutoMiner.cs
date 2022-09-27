@@ -50,8 +50,6 @@ namespace AutoMiner
             if (!config.enabled)
                 return;
 
-            ModPatches.PatchInput(this);
-
             helper.Events.Input.ButtonsChanged += Input_ButtonsChanged;
             helper.Events.Display.RenderedWorld += Display_RenderedWorld;
             helper.Events.GameLoop.UpdateTicked += GameLoop_UpdateTicked;
@@ -76,8 +74,6 @@ namespace AutoMiner
             Helper.Events.GameLoop.GameLaunched -= GameLoop_GameLaunched;
             Helper.Events.World.ObjectListChanged -= World_ObjectListChanged;
             Helper.Events.World.NpcListChanged -= World_NpcListChanged;
-
-            ModPatches.ClearKeys();
         }
 
         private void World_NpcListChanged(object sender, StardewModdingAPI.Events.NpcListChangedEventArgs e)
@@ -391,10 +387,6 @@ namespace AutoMiner
             SetHUDMessage("Bot disabled");
             botState = BOT_STATE.DISABLED;
             user32121API.CancelPathfinding();
-            ModPatches.SetKeyUp(Game1.options.moveUpButton[0].key);
-            ModPatches.SetKeyUp(Game1.options.moveDownButton[0].key);
-            ModPatches.SetKeyUp(Game1.options.moveLeftButton[0].key);
-            ModPatches.SetKeyUp(Game1.options.moveRightButton[0].key);
         }
 
         public TileData IsPassableIncludeMonsters(int x, int y, IEnumerable<Monster> monsters)
