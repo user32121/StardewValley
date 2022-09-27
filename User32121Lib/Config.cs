@@ -11,6 +11,8 @@ namespace User32121Lib
 
         public KeybindList spamTool = new KeybindList(SButton.Q);
 
+        public KeybindList abortPathFinding = new KeybindList(SButton.CapsLock);
+
         public int defaultBreakWeedCost = 2;
         public int defaultBreakStoneCost = 10;
 

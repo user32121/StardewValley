@@ -79,6 +79,9 @@ namespace User32121Lib
             if (config.reloadConfig.JustPressed())
                 ReloadConfig();
 
+            if (config.abortPathFinding.JustPressed())
+                CancelPathfinding();
+
             if (e.IsMultipleOf((uint)(config.recalculationFrequency * 60)) && target != null)
                 CalculatePath();
 
@@ -258,6 +261,8 @@ namespace User32121Lib
                         case TileData.ACTION.ACTIONBUTTON:
                             if (SwitchToTool(pathActions[pathIndex].tool))
                                 ModPatches.QuickPressKey(Game1.options.actionButton[0].key);
+                            else
+                                CancelPathfinding();
                             break;
                         case TileData.ACTION.USETOOLBUTTON:
                             if (Game1.player.stamina < config.minimumStamina)
@@ -268,6 +273,8 @@ namespace User32121Lib
                             }
                             if (SwitchToTool(pathActions[pathIndex].tool))
                                 ModPatches.QuickPressKey(Game1.options.useToolButton[0].key);
+                            else
+                                CancelPathfinding();
                             break;
                         case TileData.ACTION.USETOOL:
                             if (Game1.player.stamina < config.minimumStamina)
@@ -281,6 +288,8 @@ namespace User32121Lib
                             //use tool
                             if (SwitchToTool(pathActions[pathIndex].tool))
                                 Game1.player.BeginUsingTool();
+                            else
+                                CancelPathfinding();
                             break;
                         case TileData.ACTION.CUSTOM:
                             pathActions[pathIndex].customAction();
@@ -291,13 +300,13 @@ namespace User32121Lib
                 }
             DONE_ACTION_CODE:
                 if (path != null)
-                    if (path[pathIndex] == Game1.player.getTileLocationPoint())
+                    if (path[pathIndex] == Game1.player.getTileLocationPoint() && pathActions[pathIndex].IsPassableWithoutAction)
                     {
                         pathIndex++;
                         if (pathIndex >= path.Count)
                         {
-                            pathfindingComplete();
                             ResetValues(canceled: false);
+                            pathfindingComplete();
                         }
                     }
                     else
@@ -438,7 +447,7 @@ namespace User32121Lib
                 DisableMod();
         }
 
-        public void Pathfind(Func<int, int, bool> isTarget, Func<int, int, TileData> isPassable = null, Action pathfindingCanceled = null, Action pathfindingComplete = null, bool quiet = false)
+        public void Pathfind(Func<int, int, bool> isTarget, Func<int, int, TileData> isPassable = null, Action pathfindingCanceled = null, Action pathfindingComplete = null, bool suppressNoPathNotification = false)
         {
             if (target != null)
                 this.pathfindingCanceled();
@@ -448,7 +457,7 @@ namespace User32121Lib
             this.pathfindingCanceled = pathfindingCanceled ?? NOOPFunction;
             this.pathfindingComplete = pathfindingComplete ?? NOOPFunction;
 
-            CalculatePath(quiet);
+            CalculatePath(suppressNoPathNotification);
         }
 
         public TileData DefaultIsPassable(int x, int y)
@@ -520,7 +529,7 @@ namespace User32121Lib
             }
         }
 
-        private void CalculatePath(bool quiet = false)
+        private void CalculatePath(bool suppressNoPathNotification = false)
         {
             ResetValues(canceled: false);
 
@@ -605,7 +614,7 @@ namespace User32121Lib
 
             if (closestTarget == negOne)
             {
-                if (!quiet)
+                if (!suppressNoPathNotification)
                     Monitor.Log("unable to reach any targets", LogLevel.Debug);
                 return;
             }

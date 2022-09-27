@@ -401,8 +401,9 @@ namespace AutoMiner
         {
             TileData res = user32121API.DefaultIsPassableWithMining(x, y);
 
-            Rectangle tileBB = new Rectangle(x * Game1.tileSize + 1, y * Game1.tileSize + 1, Game1.tileSize - 2, Game1.tileSize - 2);
             if (!res.IsPassable)
+            {
+                Rectangle tileBB = new Rectangle(x * Game1.tileSize + 1, y * Game1.tileSize + 1, Game1.tileSize - 2, Game1.tileSize - 2);
                 foreach (Monster mon in monsters)
                     if (tileBB.Intersects(mon.GetBoundingBox()))
                     {
@@ -411,6 +412,7 @@ namespace AutoMiner
                         else
                             return new TileData(TileData.ACTION.USETOOL, typeof(MeleeWeapon), 1, () => mon.Health <= 0);
                     }
+            }
 
             return res;
         }
