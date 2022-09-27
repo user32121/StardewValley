@@ -44,8 +44,6 @@ namespace AutoMiner
 
         Texture2D blank;
 
-        private Stopwatch stopwatch = new Stopwatch();
-
         public override void Entry(IModHelper helper)
         {
             ReloadConfig();
@@ -53,8 +51,6 @@ namespace AutoMiner
                 return;
 
             ModPatches.PatchInput(this);
-
-            Utils.Initialize(this);
 
             helper.Events.Input.ButtonsChanged += Input_ButtonsChanged;
             helper.Events.Display.RenderedWorld += Display_RenderedWorld;
@@ -86,12 +82,14 @@ namespace AutoMiner
 
         private void World_NpcListChanged(object sender, StardewModdingAPI.Events.NpcListChangedEventArgs e)
         {
-            user32121API.CancelPathfinding();  //force reevaluate
+            if (botState == BOT_STATE.ENABLED)
+                user32121API.CancelPathfinding();  //force reevaluate
         }
 
         private void World_ObjectListChanged(object sender, StardewModdingAPI.Events.ObjectListChangedEventArgs e)
         {
-            user32121API.CancelPathfinding();  //force reevaluate
+            if (botState == BOT_STATE.ENABLED)
+                user32121API.CancelPathfinding();  //force reevaluate
         }
 
         private void GameLoop_GameLaunched(object sender, StardewModdingAPI.Events.GameLaunchedEventArgs e)

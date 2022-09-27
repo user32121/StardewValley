@@ -25,10 +25,6 @@ namespace AutoNav
 
         public float displayOffsetFromCenter = 200;
 
-        public int pathThickness = 2;
-        public Color pathColor = Color.Lime;
-
-
         public enum DIRECTION
         {
             NONE,
@@ -66,15 +62,16 @@ namespace AutoNav
                 { DIRECTION.DOWN, "Forest" },
                 { DIRECTION.UP, "Backwoods" },
                 { DIRECTION.UPLEFT, "FarmCave" },
-                { DIRECTION.UPRIGHT, "68,16|68,15;Mail" },
-                { DIRECTION.CENTER, "FarmHouse" },
+                { DIRECTION.UPRIGHT, "68,16;68,15|Mail" },
+                { DIRECTION.CENTER, "64,14|FarmHouse" },
             } },
             { "BusStop", new Dictionary<DIRECTION, string>()
             {
                 { DIRECTION.RIGHT, "Town" },
                 { DIRECTION.LEFT, "Farm" },
-                { DIRECTION.UP, "Minecart" },
+                { DIRECTION.UP, "4,3;5,3;6,3|Minecart" },
                 { DIRECTION.UPLEFT, "Backwoods" },
+                { DIRECTION.CENTER, "7,11|Bus" },
             } },
             { "Town", new Dictionary<DIRECTION, string>()
             {
@@ -82,7 +79,7 @@ namespace AutoNav
                 { DIRECTION.DOWN, "Beach" },
                 { DIRECTION.UP, "Mountain" },
                 { DIRECTION.DOWNLEFT, "Forest" },
-                { DIRECTION.RIGHT, "Minecart" },
+                { DIRECTION.RIGHT, "105,79;106,79;106,79|Minecart" },
             } },
             { "Backwoods", new Dictionary<DIRECTION, string>()
             {
@@ -95,7 +92,8 @@ namespace AutoNav
             {
                 { DIRECTION.RIGHT, "Town" },
                 { DIRECTION.UP, "Farm" },
-                { DIRECTION.LEFT, "Woods" },
+                { DIRECTION.UPLEFT, "Woods" },
+                { DIRECTION.LEFT, "5,26|Wizard" },
             } },
             { "Woods", new Dictionary<DIRECTION, string>()
             {
@@ -125,12 +123,13 @@ namespace AutoNav
             } },
             { "Mine", new Dictionary<DIRECTION, string>()
             {
-                { DIRECTION.LEFT, "Minecart" },
+                { DIRECTION.LEFT, "11,10;12,10|Minecart" },
                 { DIRECTION.DOWN, "Mountain" },
+                { DIRECTION.RIGHT, "23,9|Ladder" },
             } },
             { "Tent", new Dictionary<DIRECTION, string>()
             {
-                { DIRECTION.LEFT, "Minecart" },
+                { DIRECTION.DOWN, "Mountain" },
             } },
             { "Greenhouse", new Dictionary<DIRECTION, string>()
             {

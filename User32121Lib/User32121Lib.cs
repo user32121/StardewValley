@@ -79,7 +79,7 @@ namespace User32121Lib
             if (config.reloadConfig.JustPressed())
                 ReloadConfig();
 
-            if (e.IsMultipleOf((uint)(config.recalculationFrequency * 30)) && target != null)
+            if (e.IsMultipleOf((uint)(config.recalculationFrequency * 60)) && target != null)
                 CalculatePath();
 
             if (Game1.currentLocation == null || Game1.player.UsingTool || Game1.player.isEating)
@@ -522,7 +522,7 @@ namespace User32121Lib
 
         private void CalculatePath(bool quiet = false)
         {
-            ResetValues();
+            ResetValues(canceled: false);
 
             xTile.Dimensions.Size size = Game1.currentLocation.Map.Layers[0].LayerSize;
             Point start = Game1.player.getTileLocationPoint();
@@ -605,7 +605,7 @@ namespace User32121Lib
 
             if (closestTarget == negOne)
             {
-                if (quiet)
+                if (!quiet)
                     Monitor.Log("unable to reach any targets", LogLevel.Debug);
                 return;
             }

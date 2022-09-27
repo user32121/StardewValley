@@ -6,6 +6,7 @@ using StardewValley.Locations;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using User32121Lib;
 using static AutoNav.Config;
 
 namespace AutoNav
@@ -14,68 +15,59 @@ namespace AutoNav
     {
         Config config;
 
+        private IAPI user32121API;
+
         bool overlayEnabled = false;
 
         Texture2D blank;
 
-        Point? target;
-        List<Vector2> path;
-        int pathIndex;
+        HashSet<Point> targetWarps, targetTiles;
+        Dictionary<Point, Point> targetWarpToActualWarp;
         DIRECTION movingDir;
-
-        GameLocation prevLocation;
 
         readonly float sqrtHalf = MathF.Sqrt(0.5f);
 
-
         public override void Entry(IModHelper helper)
         {
-            config = Helper.ReadConfig<Config>();
-            helper.WriteConfig(config);
+            ReloadConfig();
+            if (!config.enabled)
+                return;
 
             ModPatches.PatchInput(this);
 
-            Utils.Initialize(this);
-
-            Helper.Events.Input.ButtonsChanged += Input_ButtonsChanged;
+            helper.Events.Input.ButtonsChanged += Input_ButtonsChanged;
             helper.Events.Display.RenderedWorld += Display_RenderedWorld;
             helper.Events.Player.Warped += Player_Warped;
-            helper.Events.GameLoop.UpdateTicked += GameLoop_UpdateTicked;
+            helper.Events.GameLoop.GameLaunched += GameLoop_GameLaunched;
         }
 
-        private void GameLoop_UpdateTicked(object sender, StardewModdingAPI.Events.UpdateTickedEventArgs e)
+        private void DisableMod()
         {
-            if (target.HasValue && path != null)
-            {
-                //minecart
-                if ((target.Value - Game1.player.getTileLocationPoint()).ToVector2().LengthSquared() <= 2 &&
-                    (config.warpLists[Game1.currentLocation.Name][movingDir] == "Minecart" || config.warpLists[Game1.currentLocation.Name][movingDir] == "FarmHouse"))
-                {
-                    ModPatches.QuickPressKey(Game1.options.actionButton[0].key);
-                }
+            Helper.Events.Input.ButtonsChanged += Input_ButtonsChanged;
+            Helper.Events.Display.RenderedWorld += Display_RenderedWorld;
+            Helper.Events.Player.Warped += Player_Warped;
+            Helper.Events.GameLoop.GameLaunched += GameLoop_GameLaunched;
 
-                //travel along path
-                if (pathIndex < path.Count)
-                    if (path[pathIndex] == Game1.player.getTileLocation())
-                        pathIndex++;
-                    else
-                    {
-                        ModPatches.SetKeyUp(Game1.options.moveUpButton[0].key);
-                        ModPatches.SetKeyUp(Game1.options.moveDownButton[0].key);
-                        ModPatches.SetKeyUp(Game1.options.moveLeftButton[0].key);
-                        ModPatches.SetKeyUp(Game1.options.moveRightButton[0].key);
-                        Rectangle bb = Game1.player.GetBoundingBox();
-                        if (bb.Left < path[pathIndex].X * Game1.tileSize)
-                            ModPatches.SetKeyDown(Game1.options.moveRightButton[0].key);
-                        else if (bb.Right > (path[pathIndex].X + 1) * Game1.tileSize)
-                            ModPatches.SetKeyDown(Game1.options.moveLeftButton[0].key);
-                        if (bb.Top < path[pathIndex].Y * Game1.tileSize)
-                            ModPatches.SetKeyDown(Game1.options.moveDownButton[0].key);
-                        else if (bb.Bottom > (path[pathIndex].Y + 1) * Game1.tileSize)
-                            ModPatches.SetKeyDown(Game1.options.moveUpButton[0].key);
-                    }
+            ModPatches.ClearKeys();
+        }
+
+        private void ReloadConfig()
+        {
+            config = Helper.ReadConfig<Config>();
+            Helper.WriteConfig(config);
+
+            if (!config.enabled)
+                DisableMod();
+        }
+
+        private void GameLoop_GameLaunched(object sender, StardewModdingAPI.Events.GameLaunchedEventArgs e)
+        {
+            user32121API = Helper.ModRegistry.GetApi<IAPI>("user32121.User32121Lib");
+            if (user32121API == null)
+            {
+                Monitor.Log("Unable to load user32121.User32121Lib", LogLevel.Error);
+                DisableMod();
             }
-            prevLocation = Game1.currentLocation;
         }
 
         private void Player_Warped(object sender, StardewModdingAPI.Events.WarpedEventArgs e)
@@ -92,42 +84,27 @@ namespace AutoNav
 
             if (overlayEnabled)
             {
-                //path
-                if (path != null)
-                {
-                    Point curPos, prevPos = Point.Zero;
-                    for (int i = 0; i < path.Count; i++)
-                    {
-                        int screenX = (int)(path[i].X * Game1.tileSize - Game1.viewport.X + Game1.tileSize / 2);
-                        int screenY = (int)(path[i].Y * Game1.tileSize - Game1.viewport.Y + Game1.tileSize / 2);
-                        curPos = new Point(screenX, screenY);
-                        if (i > 0)
-                            e.SpriteBatch.Draw(blank, new Rectangle(screenX, screenY, (int)(curPos - prevPos).ToVector2().Length(), config.pathThickness), null, config.pathColor, MathF.Atan2(prevPos.Y - curPos.Y, prevPos.X - curPos.X), Vector2.Zero, SpriteEffects.None, 0);
-                        prevPos = curPos;
-                    }
-                }
-
                 e.SpriteBatch.Draw(blank, new Rectangle(0, 0, Game1.viewport.Width, Game1.viewport.Height), Color.Black * 0.5f);
                 if (config.warpLists.TryGetValue(Game1.currentLocation.Name, out Dictionary<DIRECTION, string> warps))
                 {
                     if (warps.TryGetValue(DIRECTION.CENTER, out string warpName))
-                    { warpName = warpName.Split(';').Last(); e.SpriteBatch.DrawString(Game1.dialogueFont, warpName, new Vector2(Game1.viewport.Width / 2 - Game1.dialogueFont.MeasureString(warpName).X / 2, Game1.viewport.Height / 2 - Game1.dialogueFont.LineSpacing / 2), movingDir == DIRECTION.CENTER ? Color.Lime : Color.White); }
+                    { warpName = warpName.Split('|').Last(); e.SpriteBatch.DrawString(Game1.dialogueFont, warpName, new Vector2(Game1.viewport.Width / 2 - Game1.dialogueFont.MeasureString(warpName).X / 2, Game1.viewport.Height / 2 - Game1.dialogueFont.LineSpacing / 2), movingDir == DIRECTION.CENTER ? Color.Lime : Color.White); }
                     if (warps.TryGetValue(DIRECTION.UP, out warpName))
-                    { warpName = warpName.Split(';').Last(); e.SpriteBatch.DrawString(Game1.dialogueFont, warpName, new Vector2(Game1.viewport.Width / 2 - Game1.dialogueFont.MeasureString(warpName).X / 2, Game1.viewport.Height / 2 - Game1.dialogueFont.LineSpacing * 5 / 2 - config.displayOffsetFromCenter), movingDir == DIRECTION.UP ? Color.Lime : Color.White); }
+                    { warpName = warpName.Split('|').Last(); e.SpriteBatch.DrawString(Game1.dialogueFont, warpName, new Vector2(Game1.viewport.Width / 2 - Game1.dialogueFont.MeasureString(warpName).X / 2, Game1.viewport.Height / 2 - Game1.dialogueFont.LineSpacing * 5 / 2 - config.displayOffsetFromCenter), movingDir == DIRECTION.UP ? Color.Lime : Color.White); }
                     if (warps.TryGetValue(DIRECTION.DOWN, out warpName))
-                    { warpName = warpName.Split(';').Last(); e.SpriteBatch.DrawString(Game1.dialogueFont, warpName, new Vector2(Game1.viewport.Width / 2 - Game1.dialogueFont.MeasureString(warpName).X / 2, Game1.viewport.Height / 2 + Game1.dialogueFont.LineSpacing * 3 / 2 + config.displayOffsetFromCenter), movingDir == DIRECTION.DOWN ? Color.Lime : Color.White); }
+                    { warpName = warpName.Split('|').Last(); e.SpriteBatch.DrawString(Game1.dialogueFont, warpName, new Vector2(Game1.viewport.Width / 2 - Game1.dialogueFont.MeasureString(warpName).X / 2, Game1.viewport.Height / 2 + Game1.dialogueFont.LineSpacing * 3 / 2 + config.displayOffsetFromCenter), movingDir == DIRECTION.DOWN ? Color.Lime : Color.White); }
                     if (warps.TryGetValue(DIRECTION.LEFT, out warpName))
-                    { warpName = warpName.Split(';').Last(); e.SpriteBatch.DrawString(Game1.dialogueFont, warpName, new Vector2(Game1.viewport.Width / 2 - Game1.dialogueFont.MeasureString(warpName).X - config.displayOffsetFromCenter, Game1.viewport.Height / 2 - Game1.dialogueFont.LineSpacing / 2), movingDir == DIRECTION.LEFT ? Color.Lime : Color.White); }
+                    { warpName = warpName.Split('|').Last(); e.SpriteBatch.DrawString(Game1.dialogueFont, warpName, new Vector2(Game1.viewport.Width / 2 - Game1.dialogueFont.MeasureString(warpName).X - config.displayOffsetFromCenter, Game1.viewport.Height / 2 - Game1.dialogueFont.LineSpacing / 2), movingDir == DIRECTION.LEFT ? Color.Lime : Color.White); }
                     if (warps.TryGetValue(DIRECTION.RIGHT, out warpName))
-                    { warpName = warpName.Split(';').Last(); e.SpriteBatch.DrawString(Game1.dialogueFont, warpName, new Vector2(Game1.viewport.Width / 2 + config.displayOffsetFromCenter, Game1.viewport.Height / 2 - Game1.dialogueFont.LineSpacing / 2), movingDir == DIRECTION.RIGHT ? Color.Lime : Color.White); }
+                    { warpName = warpName.Split('|').Last(); e.SpriteBatch.DrawString(Game1.dialogueFont, warpName, new Vector2(Game1.viewport.Width / 2 + config.displayOffsetFromCenter, Game1.viewport.Height / 2 - Game1.dialogueFont.LineSpacing / 2), movingDir == DIRECTION.RIGHT ? Color.Lime : Color.White); }
                     if (warps.TryGetValue(DIRECTION.UPRIGHT, out warpName))
-                    { warpName = warpName.Split(';').Last(); e.SpriteBatch.DrawString(Game1.dialogueFont, warpName, new Vector2(Game1.viewport.Width / 2 + config.displayOffsetFromCenter * sqrtHalf, Game1.viewport.Height / 2 - Game1.dialogueFont.LineSpacing * 3 / 2 - config.displayOffsetFromCenter * sqrtHalf), movingDir == DIRECTION.UPRIGHT ? Color.Lime : Color.White); }
+                    { warpName = warpName.Split('|').Last(); e.SpriteBatch.DrawString(Game1.dialogueFont, warpName, new Vector2(Game1.viewport.Width / 2 + config.displayOffsetFromCenter * sqrtHalf, Game1.viewport.Height / 2 - Game1.dialogueFont.LineSpacing * 3 / 2 - config.displayOffsetFromCenter * sqrtHalf), movingDir == DIRECTION.UPRIGHT ? Color.Lime : Color.White); }
                     if (warps.TryGetValue(DIRECTION.UPLEFT, out warpName))
-                    { warpName = warpName.Split(';').Last(); e.SpriteBatch.DrawString(Game1.dialogueFont, warpName, new Vector2(Game1.viewport.Width / 2 - Game1.dialogueFont.MeasureString(warpName).X - config.displayOffsetFromCenter * sqrtHalf, Game1.viewport.Height / 2 - Game1.dialogueFont.LineSpacing * 3 / 2 - config.displayOffsetFromCenter * sqrtHalf), movingDir == DIRECTION.UPLEFT ? Color.Lime : Color.White); }
+                    { warpName = warpName.Split('|').Last(); e.SpriteBatch.DrawString(Game1.dialogueFont, warpName, new Vector2(Game1.viewport.Width / 2 - Game1.dialogueFont.MeasureString(warpName).X - config.displayOffsetFromCenter * sqrtHalf, Game1.viewport.Height / 2 - Game1.dialogueFont.LineSpacing * 3 / 2 - config.displayOffsetFromCenter * sqrtHalf), movingDir == DIRECTION.UPLEFT ? Color.Lime : Color.White); }
                     if (warps.TryGetValue(DIRECTION.DOWNRIGHT, out warpName))
-                    { warpName = warpName.Split(';').Last(); e.SpriteBatch.DrawString(Game1.dialogueFont, warpName, new Vector2(Game1.viewport.Width / 2 + config.displayOffsetFromCenter * sqrtHalf, Game1.viewport.Height / 2 + Game1.dialogueFont.LineSpacing / 2 + config.displayOffsetFromCenter * sqrtHalf), movingDir == DIRECTION.DOWNRIGHT ? Color.Lime : Color.White); }
+                    { warpName = warpName.Split('|').Last(); e.SpriteBatch.DrawString(Game1.dialogueFont, warpName, new Vector2(Game1.viewport.Width / 2 + config.displayOffsetFromCenter * sqrtHalf, Game1.viewport.Height / 2 + Game1.dialogueFont.LineSpacing / 2 + config.displayOffsetFromCenter * sqrtHalf), movingDir == DIRECTION.DOWNRIGHT ? Color.Lime : Color.White); }
                     if (warps.TryGetValue(DIRECTION.DOWNLEFT, out warpName))
-                    { warpName = warpName.Split(';').Last(); e.SpriteBatch.DrawString(Game1.dialogueFont, warpName, new Vector2(Game1.viewport.Width / 2 - Game1.dialogueFont.MeasureString(warpName).X - config.displayOffsetFromCenter * sqrtHalf, Game1.viewport.Height / 2 + Game1.dialogueFont.LineSpacing / 2 + config.displayOffsetFromCenter * sqrtHalf), movingDir == DIRECTION.DOWNLEFT ? Color.Lime : Color.White); }
+                    { warpName = warpName.Split('|').Last(); e.SpriteBatch.DrawString(Game1.dialogueFont, warpName, new Vector2(Game1.viewport.Width / 2 - Game1.dialogueFont.MeasureString(warpName).X - config.displayOffsetFromCenter * sqrtHalf, Game1.viewport.Height / 2 + Game1.dialogueFont.LineSpacing / 2 + config.displayOffsetFromCenter * sqrtHalf), movingDir == DIRECTION.DOWNLEFT ? Color.Lime : Color.White); }
                 }
             }
         }
@@ -141,7 +118,7 @@ namespace AutoNav
             }
         }
 
-        private bool IsPathFindingDone()
+        private bool IsPathFindingComplete()
         {
             return Game1.activeClickableMenu != null || Game1.fadeToBlack;
         }
@@ -193,91 +170,61 @@ namespace AutoNav
 
                 if (targetDir != DIRECTION.NONE)
                 {
+                    StopBot();
+
                     if (config.warpLists.TryGetValue(Game1.currentLocation.Name, out Dictionary<DIRECTION, string> warps))
                     {
                         if (warps.TryGetValue(targetDir, out string warpData))
                         {
                             //travel to warp
-                            string warpName = warpData.Split(";")[0];
+                            string warpName = warpData.Split("|")[0];
 
                             xTile.Dimensions.Size size = Game1.currentLocation.map.Layers[0].LayerSize;
-                            HashSet<Point> warpTiles = new HashSet<Point>();
+                            targetWarps = new HashSet<Point>();
+                            targetWarpToActualWarp = new Dictionary<Point, Point>();
                             foreach (Warp warp in Game1.currentLocation.warps)
                                 if (warp.TargetName == warpData)
-                                    warpTiles.Add(new Point(warp.X, warp.Y));
+                                {
+                                    Point actual = new Point(warp.X, warp.Y);
+                                    Point target = new Point(
+                                       Math.Max(0, Math.Min(size.Width - 1, warp.X)),
+                                       Math.Max(0, Math.Min(size.Height - 1, warp.Y)));
+                                    targetWarps.Add(target);
+                                    targetWarpToActualWarp[target] = actual;
+                                }
 
+                            targetTiles = new HashSet<Point>();
                             if (warpName.Contains(','))
                             {
-                                string[] points = warpName.Split('|');
+                                string[] points = warpName.Split(';');
                                 foreach (string point in points)
                                 {
                                     string[] pointXY = point.Split(',');
                                     if (pointXY.Length == 2 && int.TryParse(pointXY[0], out int x) && int.TryParse(pointXY[1], out int y))
-                                        warpTiles.Add(new Point(x, y));
+                                        targetTiles.Add(new Point(x, y));
                                     else
                                         Monitor.Log(string.Format("unable to parse {0}: {1}: {2}", Game1.currentLocation.Name, targetDir.ToString(), point), LogLevel.Debug);
                                 }
                             }
 
-                            if (warpData == "Minecart")
-                            {
-                                if (Game1.currentLocation is BusStop)
-                                {
-                                    warpTiles.Add(new Point(4, 3));
-                                    warpTiles.Add(new Point(5, 3));
-                                    warpTiles.Add(new Point(6, 3));
-                                }
-                                else if (Game1.currentLocation is Mine)
-                                {
-                                    warpTiles.Add(new Point(11, 10));
-                                    warpTiles.Add(new Point(12, 10));
-                                }
-                                else if (Game1.currentLocation is Town)
-                                {
-                                    warpTiles.Add(new Point(105, 79));
-                                    warpTiles.Add(new Point(106, 79));
-                                    warpTiles.Add(new Point(106, 79));
-                                }
-                            }
-                            else if (warpData == "FarmHouse")
-                            {
-                                warpTiles.Add(new Point(64, 15));
-                            }
-                            target = Utils.Bfs(size, Game1.player.getTileLocationPoint(), (int x, int y) => warpTiles.Contains(new Point(x, y)), IsTilePassable, out Point[,] prevTileMap);
-                            if (target.HasValue)
-                            {
-                                path = Utils.GeneratePathToTarget(Game1.player.getTileLocationPoint(), target.Value, prevTileMap);
-                                pathIndex = 0;
-                                if (path == null)
-                                {
-                                    Game1.addHUDMessage(new HUDMessage("Unable to construct path to " + warpData, HUDMessage.error_type));
-                                    StopBot();
-                                }
-                                else
-                                {
-                                    movingDir = targetDir;
-                                }
-                            }
+                            user32121API.Pathfind((x, y) => targetWarps.Contains(new Point(x, y)) || targetTiles.Contains(new Point(x, y)), IsPassable);
+
+                            if (user32121API.HasPath())
+                                movingDir = targetDir;
                             else
-                            {
                                 Game1.addHUDMessage(new HUDMessage("Unable to reach " + warpData, HUDMessage.error_type));
-                                StopBot();
-                            }
                         }
                     }
                     else
-                    {
                         Monitor.LogOnce(Game1.currentLocation.Name + " has no warps configured", LogLevel.Debug);
-                        StopBot();
-                    }
                 }
             }
         }
 
         private void StopBot()
         {
-            target = null;
-            path = null;
+            user32121API.CancelPathfinding();
+            targetTiles = null;
             movingDir = DIRECTION.NONE;
             ModPatches.SetKeyUp(Game1.options.moveUpButton[0].key);
             ModPatches.SetKeyUp(Game1.options.moveDownButton[0].key);
@@ -285,9 +232,33 @@ namespace AutoNav
             ModPatches.SetKeyUp(Game1.options.moveRightButton[0].key);
         }
 
-        private bool IsTilePassable(int x, int y)
+        private TileData IsPassable(int x, int y)
         {
-            return !Game1.currentLocation.isCollidingPosition(new Rectangle(x * Game1.tileSize + 1, y * Game1.tileSize + 1, Game1.tileSize - 2, Game1.tileSize - 2), Game1.viewport, true, -1, false, Game1.player);
+            if (targetTiles.Contains(new Point(x, y)))
+                return new TileData(TileData.ACTION.ACTIONBUTTON, null, 1, IsPathFindingComplete);
+            else if (targetWarps.Contains(new Point(x, y)))
+                return new TileData(TileData.ACTION.CUSTOM, null, 1, () => false, () => ContinueMovingToEndOfTile(x, y));
+            else
+                return user32121API.DefaultIsPassable(x, y);
+        }
+
+        private void ContinueMovingToEndOfTile(int x, int y)
+        {
+            Point targetTile = targetWarpToActualWarp[new Point(x, y)];
+
+            ModPatches.SetKeyUp(Game1.options.moveUpButton[0].key);
+            ModPatches.SetKeyUp(Game1.options.moveDownButton[0].key);
+            ModPatches.SetKeyUp(Game1.options.moveLeftButton[0].key);
+            ModPatches.SetKeyUp(Game1.options.moveRightButton[0].key);
+            Rectangle bb = Game1.player.GetBoundingBox();
+            if (bb.Left < targetTile.X * Game1.tileSize)
+                ModPatches.SetKeyDown(Game1.options.moveRightButton[0].key);
+            else if (bb.Right > (targetTile.X + 1) * Game1.tileSize)
+                ModPatches.SetKeyDown(Game1.options.moveLeftButton[0].key);
+            if (bb.Top < targetTile.Y * Game1.tileSize)
+                ModPatches.SetKeyDown(Game1.options.moveDownButton[0].key);
+            else if (bb.Bottom > (targetTile.Y + 1) * Game1.tileSize)
+                ModPatches.SetKeyDown(Game1.options.moveUpButton[0].key);
         }
     }
 }

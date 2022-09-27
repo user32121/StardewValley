@@ -37,14 +37,5 @@ namespace AutoMiner
             { 765, "Iridium Node" },
             { 95, "Radioactive Node" },
         };
-
-
-
-        static Mod mod;
-
-        public static void Initialize(Mod mod)
-        {
-            Utils.mod = mod;
-        }
     }
 }
