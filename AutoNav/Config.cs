@@ -23,11 +23,17 @@ namespace AutoNav
         public KeybindList downLeft = new KeybindList(StardewModdingAPI.SButton.Z);
         public KeybindList center = new KeybindList(StardewModdingAPI.SButton.S);
 
-        public float displayOffsetFromCenter = 200;
+        public float displayDistanceFromCenter = 200;
+
+        public bool allowChainDirections = true;  //note: only supported for warps
+        public float chainDirectionConfirmTime = 0.5f;
+
+        public double apiMaxBFSTime = 5;
+        public double apiMaxPathingTime = 1;
 
         public enum DIRECTION
         {
-            NONE,
+            NONE = 0,
             LEFT,
             RIGHT,
             UP,
@@ -38,6 +44,7 @@ namespace AutoNav
             DOWNRIGHT,
             CENTER,
         }
+
         public Dictionary<string, Dictionary<DIRECTION, string>> warpLists = new Dictionary<string, Dictionary<DIRECTION, string>>()
         {
             { "FarmHouse", new Dictionary<DIRECTION, string>()

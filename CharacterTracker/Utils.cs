@@ -11,7 +11,8 @@ namespace CharacterTracker
     {
         public static Dictionary<String, Type> nameToTool = new Dictionary<String, Type>()
         {
-            { "Milk Pail", typeof(MilkPail) }
+            { "Milk Pail", typeof(MilkPail) },
+            { "Shears", typeof(Shears) },
         };
     }
 }

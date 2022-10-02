@@ -76,6 +76,8 @@ namespace User32121Lib
 
         private void GameLoop_UpdateTicked(object sender, StardewModdingAPI.Events.UpdateTickedEventArgs e)
         {
+            ModPatches.UpdateSuppressed();
+
             if (config.reloadConfig.JustPressed())
                 ReloadConfig();
 
@@ -170,7 +172,7 @@ namespace User32121Lib
                 }
 
                 //find if monster will be in weapon's aoe
-                if (nearestMonster != null)
+                if (nearestMonster != null && nearestMonsterDistanceSqr < 25 * Game1.tileSize * Game1.tileSize)
                 {
                     if (SwitchToTool(typeof(MeleeWeapon)))
                     {
@@ -214,6 +216,11 @@ namespace User32121Lib
             //travel along path
             if (target != null && path != null && pathIndex < path.Count)
             {
+                ModPatches.SetKeyUp(Game1.options.moveUpButton[0].key);
+                ModPatches.SetKeyUp(Game1.options.moveDownButton[0].key);
+                ModPatches.SetKeyUp(Game1.options.moveLeftButton[0].key);
+                ModPatches.SetKeyUp(Game1.options.moveRightButton[0].key);
+
                 if (!pathActions[pathIndex].IsPassableWithoutAction)
                 {
                     if (pathActions[pathIndex].isActionDone())
@@ -311,10 +318,6 @@ namespace User32121Lib
                     }
                     else
                     {
-                        ModPatches.SetKeyUp(Game1.options.moveUpButton[0].key);
-                        ModPatches.SetKeyUp(Game1.options.moveDownButton[0].key);
-                        ModPatches.SetKeyUp(Game1.options.moveLeftButton[0].key);
-                        ModPatches.SetKeyUp(Game1.options.moveRightButton[0].key);
                         Rectangle bb = Game1.player.GetBoundingBox();
                         if (bb.Left < path[pathIndex].X * Game1.tileSize)
                             ModPatches.SetKeyDown(Game1.options.moveRightButton[0].key);
@@ -328,7 +331,7 @@ namespace User32121Lib
             }
         }
 
-        private bool SwitchToTool(Type toolType)
+        public bool SwitchToTool(Type toolType)
         {
             //return true if succeeded
             if (toolType == null)
@@ -458,11 +461,18 @@ namespace User32121Lib
             this.pathfindingComplete = pathfindingComplete ?? NOOPFunction;
 
             CalculatePath(suppressNoPathNotification);
+            if (!HasPath())
+                CancelPathfinding();
         }
 
         public TileData DefaultIsPassable(int x, int y)
         {
-            return !Game1.currentLocation.isCollidingPosition(new Rectangle(x * Game1.tileSize + 1, y * Game1.tileSize + 1, Game1.tileSize - 2, Game1.tileSize - 2), Game1.viewport, true, -1, false, Game1.player) ? TileData.Passable : TileData.Impassable;
+            return DefaultIsPassable(x, y, Game1.currentLocation);
+        }
+
+        public TileData DefaultIsPassable(int x, int y, GameLocation location)
+        {
+            return !location.isCollidingPosition(new Rectangle(x * Game1.tileSize + 1, y * Game1.tileSize + 1, Game1.tileSize - 2, Game1.tileSize - 2), Game1.viewport, true, -1, false, Game1.player) ? TileData.Passable : TileData.Impassable;
         }
 
         public TileData DefaultIsPassableWithMining(int x, int y)
@@ -609,7 +619,7 @@ namespace User32121Lib
             Point closestTarget = negOne;
             for (int x = 0; x < scoreMap.GetLength(0); x++)
                 for (int y = 0; y < scoreMap.GetLength(1); y++)
-                    if (targetMap[x, y] && (closestTarget == negOne || scoreMap[x, y] < scoreMap[closestTarget.X, closestTarget.Y]))
+                    if (targetMap[x, y] && scoreMap[x, y] != int.MaxValue && (closestTarget == negOne || scoreMap[x, y] < scoreMap[closestTarget.X, closestTarget.Y]))
                         closestTarget = new Point(x, y);
 
             if (closestTarget == negOne)
@@ -637,7 +647,7 @@ namespace User32121Lib
                 if (prevTileMap[pos.X, pos.Y] == negOne)
                 {
                     //unable to find path, possibly broken prevTileMap?
-                    Monitor.Log("unable to contruct path to target", LogLevel.Debug);
+                    Monitor.Log("unable to construct path to target", LogLevel.Debug);
                     cancel = true;
                     break;
                 }
@@ -658,6 +668,88 @@ namespace User32121Lib
                 pathActions.Reverse();
                 Monitor.VerboseLog("Path done, length: " + path.Count);
             }
+        }
+
+        public List<(Point, int)> FindAllAccessibleTargets(Point start, Func<int, int, bool> isTarget, Func<int, int, TileData> isPassable = null, GameLocation location = null)
+        {
+            location ??= Game1.currentLocation;
+
+            xTile.Dimensions.Size size = location.Map.Layers[0].LayerSize;
+
+            Func<int, int, GameLocation, TileData> tileIsPassable;
+            if (isPassable == null)
+                tileIsPassable = DefaultIsPassable;
+            else
+                tileIsPassable = (x, y, _) => isPassable(x, y);
+
+            bool[,] targetMap = new bool[size.Width, size.Height];
+            TileData[,] costMap = new TileData[size.Width, size.Height];
+            int[,] scoreMap = new int[size.Width, size.Height];
+            for (int x = 0; x < scoreMap.GetLength(0); x++)
+                for (int y = 0; y < scoreMap.GetLength(1); y++)
+                {
+                    targetMap[x, y] = isTarget(x, y);
+                    costMap[x, y] = tileIsPassable(x, y, location);
+                    scoreMap[x, y] = int.MaxValue;
+                }
+            Queue<Point> toProcess = new Queue<Point>();
+            toProcess.Enqueue(start);
+            scoreMap[start.X, start.Y] = 0;
+
+            const int cardinalTravelCost = 10;
+            const int diagonalTravelCost = 14;
+
+            int i = 0;
+            stopwatch.Restart();
+            while (toProcess.Count > 0)
+            {
+                i++;
+
+                if (stopwatch.Elapsed.TotalSeconds > config.maxBFSTime)
+                {
+                    Monitor.Log("Bfs took longer than " + config.maxBFSTime + " seconds, killing process", LogLevel.Error);
+                    return new();
+                }
+
+                Point p = toProcess.Dequeue();
+                foreach (Point dir in directions)
+                {
+                    Point p2 = p + dir;
+                    if (p2.X >= 0 && p2.Y >= 0 && p2.X < scoreMap.GetLength(0) && p2.Y < scoreMap.GetLength(1))
+                    {
+                        if (dir.X == 0 || dir.Y == 0)
+                        {
+                            //cardinal
+                            int totalTileCost = cardinalTravelCost * costMap[p2.X, p2.Y].traversalCost;
+                            if (scoreMap[p2.X, p2.Y] > scoreMap[p.X, p.Y] + totalTileCost && costMap[p2.X, p2.Y].IsPassable)
+                            {
+                                scoreMap[p2.X, p2.Y] = scoreMap[p.X, p.Y] + totalTileCost;
+                                toProcess.Enqueue(new Point(p2.X, p2.Y));
+                            }
+                        }
+                        else
+                        {
+                            //diagonal
+                            int totalTileCost = diagonalTravelCost * costMap[p2.X, p2.Y].traversalCost;
+                            if (scoreMap[p2.X, p2.Y] > scoreMap[p.X, p.Y] + diagonalTravelCost && costMap[p.X, p2.Y].IsPassableWithoutAction && costMap[p2.X, p.Y].IsPassableWithoutAction && costMap[p2.X, p2.Y].IsPassableWithoutAction)
+                            {
+                                scoreMap[p2.X, p2.Y] = scoreMap[p.X, p.Y] + diagonalTravelCost;
+                                toProcess.Enqueue(new Point(p2.X, p2.Y));
+                            }
+                        }
+                    }
+                }
+            }
+            Monitor.VerboseLog("bfs ran " + i + " iterations");
+            stopwatch.Stop();
+
+            //find all targets
+            List<(Point, int)> accessibleTargets = new();
+            for (int x = 0; x < scoreMap.GetLength(0); x++)
+                for (int y = 0; y < scoreMap.GetLength(1); y++)
+                    if (targetMap[x, y] && (scoreMap[x, y] != int.MaxValue))
+                        accessibleTargets.Add((new(x, y), scoreMap[x, y]));
+            return accessibleTargets;
         }
 
         private void ResetValues(bool canceled = true)

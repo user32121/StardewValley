@@ -13,7 +13,7 @@ namespace CharacterTracker
         public bool enabled = true;
 
         public KeybindList tendAnimals = new KeybindList(StardewModdingAPI.SButton.L);
-        //public KeybindList talkToNPCs = new KeybindList(StardewModdingAPI.SButton.K);
+        public KeybindList talkToNPCs = new KeybindList(StardewModdingAPI.SButton.K);
         public KeybindList nextNPC = new KeybindList(StardewModdingAPI.SButton.OemComma);
         public KeybindList followNPC = new KeybindList(StardewModdingAPI.SButton.OemPeriod);
 
@@ -25,8 +25,8 @@ namespace CharacterTracker
 
         public bool petAutoPettedAnimals = true;
 
-        //public bool petPet = true;
+        public bool petPet = true;
 
-        //public bool talkToNPCsWithFullFriendship = false;
+        public bool talkToNPCsWithFullFriendship = false;
     }
 }
