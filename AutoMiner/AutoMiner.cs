@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
 using StardewValley;
 using StardewValley.Locations;
+using StardewValley.Menus;
 using StardewValley.Monsters;
 using StardewValley.Objects;
 using StardewValley.TerrainFeatures;
@@ -258,12 +259,12 @@ namespace AutoMiner
 
             if (Game1.currentLocation is MineShaft ms)
             {
-                bool ladderHasSpawned = Helper.Reflection.GetField<bool>(ms, "ladderHasSpawned").GetValue();
-                int stonesLeftOnThisLevel = Helper.Reflection.GetProperty<int>(ms, "stonesLeftOnThisLevel").GetValue();
+                bool ladderHasSpawned = Helper.Reflection.GetField<bool>(ms, "ladderHasSpawned", true).GetValue();
+                int stonesLeftOnThisLevel = Helper.Reflection.GetProperty<int>(ms, "stonesLeftOnThisLevel", true).GetValue();
                 double num3 = 0.02 + 1.0 / (double)Math.Max(1, stonesLeftOnThisLevel) + (double)Game1.player.LuckLevel / 100.0 + Game1.player.DailyLuck / 5.0;
                 if (ms.EnemyCount == 0)
                     num3 += 0.04;
-                Vector2 ladderPos = Helper.Reflection.GetProperty<Vector2>(ms, "tileBeneathLadder").GetValue();
+                Vector2 ladderPos = Helper.Reflection.GetProperty<Vector2>(ms, "tileBeneathLadder", true).GetValue();
 
                 //already spawned ladders
                 xTile.Layers.Layer layer = ms.map.GetLayer("Buildings");
@@ -307,7 +308,11 @@ namespace AutoMiner
             if (Game1.currentLocation == null)
                 return;
             if (Game1.activeClickableMenu != null)
+            {
+                if (Game1.activeClickableMenu is DialogueBox db && db.dialogues?.FirstOrDefault()?.Contains("There's a shaft", StringComparison.InvariantCultureIgnoreCase) == true)
+                    db.receiveKeyPress(Microsoft.Xna.Framework.Input.Keys.Y);
                 return;
+            }
 
             if (botState == BOT_STATE.ENABLED)
             {
@@ -333,13 +338,13 @@ namespace AutoMiner
                                 if (npc is Monster mon && mon.isGlider.Value)
                                     flyingEnemies = true;
 
-                        user32121API.Pathfind((int x, int y) => targets.Contains(new Vector2(x, y)), isPassable: user32121API.DefaultIsPassableWithMining, quiet: config.autoDescend);
+                        user32121API.Pathfind((int x, int y) => targets.Contains(new Vector2(x, y)), isPassable: user32121API.DefaultIsPassableWithMining, suppressNoPathNotification: config.autoDescend);
                         if (!user32121API.HasPath())
                         {
                             if (config.autoDescend)
                             {
                                 IEnumerable<Monster> monsters = Game1.currentLocation.characters.OfType<Monster>();
-                                user32121API.Pathfind((int x, int y) => ladders.Contains(new Vector2(x, y)), isPassable: (x, y) => IsPassableIncludeLaddersAndMonsters(x, y, monsters), quiet: includeEnemies);
+                                user32121API.Pathfind((int x, int y) => ladders.Contains(new Vector2(x, y)), isPassable: (x, y) => IsPassableIncludeLaddersAndMonsters(x, y, monsters), suppressNoPathNotification: includeEnemies);
 
                                 if (!user32121API.HasPath() && includeEnemies)
                                 {
@@ -399,7 +404,7 @@ namespace AutoMiner
                 foreach (Monster mon in monsters)
                     if (tileBB.Intersects(mon.GetBoundingBox()))
                     {
-                        if (mon is RockCrab rc && Helper.Reflection.GetField<bool>(rc, "waiter").GetValue())
+                        if (mon is RockCrab rc && Helper.Reflection.GetField<bool>(rc, "waiter", true).GetValue())
                             return new TileData(TileData.ACTION.USETOOLBUTTON, typeof(Pickaxe), 1, () => mon.Health <= 0);
                         else
                             return new TileData(TileData.ACTION.USETOOL, typeof(MeleeWeapon), 1, () => mon.Health <= 0);

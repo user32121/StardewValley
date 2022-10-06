@@ -91,6 +91,8 @@ namespace AutoNav
         {
             if (!config.allowChainDirections)
                 StopBot();
+            if (movingDir.Count == 0)
+                processingLocation = e.NewLocation;
         }
 
         private void GameLoop_UpdateTicking(object sender, StardewModdingAPI.Events.UpdateTickingEventArgs e)
@@ -122,6 +124,7 @@ namespace AutoNav
                         movingDir.Add(pendingDir);
                         prevLocation = null;
                         GetLocationInDirection(processingLocation, pendingDir, out string locationName);
+                        locationName = locationName.Split('|').Last();
 
                         processingLocation = Game1.getLocationFromName(locationName);
                         pendingDir = DIRECTION.NONE;
@@ -142,7 +145,14 @@ namespace AutoNav
                             apiWarpQueue.RemoveAt(0);
                         if (apiWarpQueue.Count > 0)
                         {
-                            Monitor.Log("next location: " + apiWarpQueue.First().Item1, LogLevel.Debug);
+                            string nextLocName = "unknown";
+                            xTile.Dimensions.Size size = Game1.currentLocation.map.Layers[0].LayerSize;
+                            (GameLocation, Point) nextWarp = apiWarpQueue.First();
+                            foreach (Warp warp in nextWarp.Item1.warps)
+                                if (Math.Max(0, Math.Min(size.Width - 1, warp.X)) == nextWarp.Item2.X && Math.Max(0, Math.Min(size.Height - 1, warp.Y)) == nextWarp.Item2.Y)
+                                    nextLocName = warp.TargetName;
+
+                            Monitor.Log("next location: " + nextLocName, LogLevel.Debug);
                             APITravelToLocation(apiWarpQueue.First());
                         }
                         else
@@ -354,29 +364,26 @@ namespace AutoNav
                         StopBot();
                         processingLocation = Game1.currentLocation;
                     }
-                    else
-                    {
-                        processingLocation ??= Game1.currentLocation;
-                    }
 
-                    if (config.warpLists.TryGetValue(processingLocation.Name, out Dictionary<DIRECTION, string> warps))
-                    {
-                        if (warps.ContainsKey(targetDir))
+                    if (processingLocation != null)
+                        if (config.warpLists.TryGetValue(processingLocation.Name, out Dictionary<DIRECTION, string> warps))
                         {
-                            if (config.allowChainDirections)
+                            if (warps.ContainsKey(targetDir))
                             {
-                                pendingDir = targetDir;
-                            }
-                            else
-                            {
-                                TravelInDir(targetDir);
-                                movingDir.Clear();
-                                movingDir.Add(targetDir);
+                                if (config.allowChainDirections)
+                                {
+                                    pendingDir = targetDir;
+                                }
+                                else
+                                {
+                                    TravelInDir(targetDir);
+                                    movingDir.Clear();
+                                    movingDir.Add(targetDir);
+                                }
                             }
                         }
-                    }
-                    else
-                        Monitor.LogOnce(processingLocation.Name + " has no warps in config", LogLevel.Debug);
+                        else
+                            Monitor.LogOnce(processingLocation.Name + " has no warps in config", LogLevel.Debug);
                 }
             }
         }
@@ -438,7 +445,8 @@ namespace AutoNav
             }
 
             GameLocation curLoc = Game1.currentLocation;
-            user32121API.Pathfind((x, y) => targetWarps.Contains(new Point(x, y)) || targetTiles.Contains(new Point(x, y)), (x, y) => IsPassable(x, y, curLoc));
+            Point startPos = Game1.player.getTileLocationPoint();
+            user32121API.Pathfind((x, y) => targetWarps.Contains(new Point(x, y)) || targetTiles.Contains(new Point(x, y)), (x, y) => IsPassable(x, y, startPos, curLoc));
 
             if (!user32121API.HasPath())
             {
@@ -469,7 +477,8 @@ namespace AutoNav
                 targetWarpToActualWarp[target] = actual;
             }
 
-            user32121API.Pathfind((x, y) => targetPoint == new Point(x, y), (x, y) => IsPassable(x, y, curLoc));
+            Point startPos = Game1.player.getTileLocationPoint();
+            user32121API.Pathfind((x, y) => targetPoint == new Point(x, y), (x, y) => IsPassable(x, y, startPos, curLoc));
 
             if (!user32121API.HasPath())
             {
@@ -488,11 +497,11 @@ namespace AutoNav
             processingLocation = Game1.currentLocation;
         }
 
-        private TileData IsPassable(int x, int y, GameLocation curLoc)
+        private TileData IsPassable(int x, int y, Point startPos, GameLocation curLoc)
         {
             if (targetTiles.Contains(new Point(x, y)))
                 return new TileData(TileData.ACTION.ACTIONBUTTON, null, 1, () => IsPathFindingComplete(curLoc));
-            else if (targetWarps.Contains(new Point(x, y)))
+            else if (targetWarps.Contains(new Point(x, y)) && new Point(x, y) != startPos)
                 return new TileData(TileData.ACTION.CUSTOM, null, 1, () => IsPathFindingComplete(curLoc), () => ContinueMovingToEndOfTile(x, y));
             else
                 return user32121API.DefaultIsPassable(x, y);

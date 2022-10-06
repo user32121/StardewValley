@@ -106,46 +106,62 @@ namespace User32121Lib
                 {
                     int indexToEat = -1;
                     int staminaRecovered = -1;
+                    int foodLeft = 0;
                     for (int i = 0; i < Game1.player.Items.Count; i++)
                     {
                         if (Game1.player.Items[i] != null &&
-                            Game1.player.Items[i].staminaRecoveredOnConsumption() > 0 &&  //good food
-                            (Game1.player.Items[i].staminaRecoveredOnConsumption() + Game1.player.Stamina <= Game1.player.MaxStamina &&  //prevent overeat
-                            Game1.player.Items[i].healthRecoveredOnConsumption() + Game1.player.health <= Game1.player.maxHealth ||  //prevent overeat
-                            Game1.player.Stamina < Game1.player.MaxStamina * config.overEatStaminaThreshold) &&   //allow overeat
-                            (Game1.player.Items[i].staminaRecoveredOnConsumption() < staminaRecovered ^ config.eatBestFoodFirst || indexToEat == -1))  //find best or worst food
+                            Game1.player.Items[i].staminaRecoveredOnConsumption() > 0)  //good food
                         {
-                            staminaRecovered = Game1.player.Items[i].staminaRecoveredOnConsumption();
-                            indexToEat = i;
+                            foodLeft += Game1.player.Items[i].Stack;
+                            if ((Game1.player.Items[i].staminaRecoveredOnConsumption() + Game1.player.Stamina <= Game1.player.MaxStamina &&  //prevent overeat
+                                Game1.player.Items[i].healthRecoveredOnConsumption() + Game1.player.health <= Game1.player.maxHealth ||  //prevent overeat
+                                Game1.player.Stamina < Game1.player.MaxStamina * config.overEatStaminaThreshold) &&   //allow overeat
+                                (Game1.player.Items[i].staminaRecoveredOnConsumption() < staminaRecovered ^ config.eatBestFoodFirst || indexToEat == -1))  //find best or worst food
+                            {
+                                staminaRecovered = Game1.player.Items[i].staminaRecoveredOnConsumption();
+                                indexToEat = i;
+                            }
                         }
                     }
                     if (indexToEat >= 0)
                     {
                         Game1.player.CurrentToolIndex = indexToEat;
                         Game1.player.eatHeldObject();
+                        if (foodLeft <= 1)
+                        {
+                            Game1.addHUDMessage(new HUDMessage("Out of food", HUDMessage.error_type));
+                        }
                     }
                 }
                 if (Game1.player.health < Game1.player.maxHealth * config.eatHealthThreshold)
                 {
                     int indexToEat = -1;
                     int healthRecovered = -1;
+                    int foodLeft = 0;
                     for (int i = 0; i < Game1.player.Items.Count; i++)
                     {
                         if (Game1.player.Items[i] != null &&
-                            Game1.player.Items[i].healthRecoveredOnConsumption() > 0 &&  //good food
-                            (Game1.player.Items[i].staminaRecoveredOnConsumption() + Game1.player.stamina <= Game1.player.MaxStamina &&  //prevent overeat
-                            Game1.player.Items[i].healthRecoveredOnConsumption() + Game1.player.health <= Game1.player.maxHealth ||  //prevent overeat
-                            Game1.player.health < Game1.player.maxHealth * config.overEatHealthThreshold) &&   //allow overeat
-                            (Game1.player.Items[i].healthRecoveredOnConsumption() < healthRecovered ^ config.eatBestFoodFirst || indexToEat == -1))  //find best or worst food
+                            Game1.player.Items[i].healthRecoveredOnConsumption() > 0)  //good food
                         {
-                            healthRecovered = Game1.player.Items[i].healthRecoveredOnConsumption();
-                            indexToEat = i;
+                            foodLeft += Game1.player.Items[i].Stack;
+                            if ((Game1.player.Items[i].staminaRecoveredOnConsumption() + Game1.player.stamina <= Game1.player.MaxStamina &&  //prevent overeat
+                                Game1.player.Items[i].healthRecoveredOnConsumption() + Game1.player.health <= Game1.player.maxHealth ||  //prevent overeat
+                                Game1.player.health < Game1.player.maxHealth * config.overEatHealthThreshold) &&   //allow overeat
+                                (Game1.player.Items[i].healthRecoveredOnConsumption() < healthRecovered ^ config.eatBestFoodFirst || indexToEat == -1))  //find best or worst food
+                            {
+                                healthRecovered = Game1.player.Items[i].healthRecoveredOnConsumption();
+                                indexToEat = i;
+                            }
                         }
                     }
                     if (indexToEat >= 0)
                     {
                         Game1.player.CurrentToolIndex = indexToEat;
                         Game1.player.eatHeldObject();
+                        if (foodLeft <= 1)
+                        {
+                            Game1.addHUDMessage(new HUDMessage("Out of food", HUDMessage.error_type));
+                        }
                     }
                 }
             }

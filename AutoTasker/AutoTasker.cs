@@ -519,6 +519,8 @@ namespace AutoTasker
                                 {
                                     if (tree.growthStage.Value < Tree.treeStage && config.onlyChopGrownTrees)
                                         isTileValid = false;
+                                    if (tree.tapped.Value && config.onlyChopUntappedTrees)
+                                        isTileValid = false;
                                 }
                                 else if (feature is FruitTree fruitTree)
                                 {

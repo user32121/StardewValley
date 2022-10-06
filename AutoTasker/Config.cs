@@ -46,5 +46,6 @@ namespace AutoTasker
         public bool waterPet = false;
         public bool alsoClearFruitTrees = false;
         public bool onlyChopGrownTrees = true;
+        public bool onlyChopUntappedTrees = true;
     }
 }
