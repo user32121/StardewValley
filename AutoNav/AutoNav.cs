@@ -124,7 +124,7 @@ namespace AutoNav
                         movingDir.Add(pendingDir);
                         prevLocation = null;
                         GetLocationInDirection(processingLocation, pendingDir, out string locationName);
-                        locationName = locationName.Split('|').Last();
+                        locationName = locationName?.Split('|')?.Last();
 
                         processingLocation = Game1.getLocationFromName(locationName);
                         pendingDir = DIRECTION.NONE;

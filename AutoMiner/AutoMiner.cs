@@ -407,7 +407,7 @@ namespace AutoMiner
                         if (mon is RockCrab rc && Helper.Reflection.GetField<bool>(rc, "waiter", true).GetValue())
                             return new TileData(TileData.ACTION.USETOOLBUTTON, typeof(Pickaxe), 1, () => mon.Health <= 0);
                         else
-                            return new TileData(TileData.ACTION.USETOOL, typeof(MeleeWeapon), 1, () => mon.Health <= 0);
+                            return new TileData(TileData.ACTION.CUSTOM, null, 1, () => mon.Health <= 0, () => { });
                     }
             }
 
