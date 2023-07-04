@@ -44,6 +44,7 @@ namespace AutoTasker
 
         public bool waterEmptyTiles = false;
         public bool waterPet = false;
+        public bool alsoClearGrass = false;
         public bool alsoClearFruitTrees = false;
         public bool onlyChopGrownTrees = true;
         public bool onlyChopUntappedTrees = true;

@@ -168,7 +168,7 @@ namespace AutoTasker
                                         else if (objName == "Twig")
                                             taskTool = typeof(Axe);
                                     }
-                                    else if (Game1.currentLocation.terrainFeatures.TryGetValue(curTaskTarget.Value, out TerrainFeature feature) && feature is Grass)
+                                    else if (config.alsoClearGrass && Game1.currentLocation.terrainFeatures.TryGetValue(curTaskTarget.Value, out TerrainFeature feature) && feature is Grass)
                                         taskTool = typeof(MeleeWeapon);
                                     else
                                     {
@@ -545,7 +545,7 @@ namespace AutoTasker
                             if (objName != null || feature != null)
                             {
                                 if ((objName == null || objName != "Weeds" && objName != "Stone" && objName != "Twig") &&
-                                    (feature == null || feature is not Grass))
+                                    (feature == null || feature is not Grass || !config.alsoClearGrass))
                                 {
                                     isTileValid = false;
                                 }
